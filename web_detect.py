@@ -181,7 +181,7 @@ if __name__ == '__main__':
     # Feature list
     imgfeats = np.array([])
 
-    # Iterate through images and get the annotations
+    # Iterate through images and get the annotations and the features
     for image in images:
         annotations = annotate(image)
         featurevector = extract_features(annotations)
@@ -189,6 +189,7 @@ if __name__ == '__main__':
             imgfeats = featurevector
         else:
             imgfeats = np.vstack((imgfeats,featurevector))
+    # Classify whether true or not
     imgfeats = imgfeats.transpose()
     X = imgfeats[0:1]
     Y = [1, 0, 0]
