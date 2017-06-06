@@ -23,6 +23,8 @@ Example usage:
 """
 # [START full_tutorial]
 # [START imports]
+import json
+
 import numpy as np
 import io
 
@@ -30,6 +32,7 @@ import time
 from google.cloud import vision
 from google.cloud.vision.feature import Feature
 from google.cloud.vision.feature import FeatureTypes
+from google.cloud.vision.image import Image
 
 # [END imports]
 
@@ -39,36 +42,7 @@ from sklearn.svm import SVC
 
 project_name = 'fakenewsll-169502'
 limit = 10
-
-def annotate(path):
-    """Returns web annotations given the path to an image."""
-    # [START get_annotations]
-    image = None
-    vision_client = vision.Client(project_name)
-
-    if path.startswith('http') or path.startswith('gs:'):
-        image = vision_client.image(source_uri=path)
-
-    else:
-        with io.open(path, 'rb') as image_file:
-            content = image_file.read()
-
-        image = vision_client.image(content=content)
-
-    features = []
-
-    features.append(Feature(feature_type=FeatureTypes.WEB_DETECTION,max_results=100000))
-    features.append(Feature(feature_type=FeatureTypes.FACE_DETECTION,max_results=100000))
-    features.append(Feature(feature_type=FeatureTypes.LANDMARK_DETECTION,max_results=limit))
-    features.append(Feature(feature_type=FeatureTypes.IMAGE_PROPERTIES,max_results=limit))
-    features.append(Feature(feature_type=FeatureTypes.TEXT_DETECTION, max_results=limit))
-    features.append(Feature(feature_type=FeatureTypes.LABEL_DETECTION, max_results=limit))
-    features.append(Feature(feature_type=FeatureTypes.SAFE_SEARCH_DETECTION, max_results=limit))
-
-    results = image.detect(features)
-
-
-    return results[0]
+vision_client = None
     # [END get_annotations]
 
 
@@ -127,45 +101,46 @@ def convert_likelihood_to_int(likelihood):
 
 def extract_features(annotations):
     featurevector = []
+    feature_dictionary = {}
     # Web feats
-    web_feats = []
-    web_feats.append(len(annotations.web.full_matching_images))
-    web_feats.append(len(annotations.web.pages_with_matching_images))
-    web_feats.append(len(annotations.web.partial_matching_images))
-    web_feats.append(len(annotations.web.web_entities))
-    for entity in annotations.web.web_entities:
-        #web_feats.append(get_word_vector(entity.description))
-        pass
+    feature_dictionary["web_full_matching_images"] = [fmi.url for fmi in annotations.web.full_matching_images]
+    feature_dictionary["web_pages_with_matching_images"] = [ pmi.url for pmi in annotations.web.pages_with_matching_images]
+    feature_dictionary["web_partial_matching_images"] = [x.url for x in annotations.web.partial_matching_images]
+    feature_dictionary["web_web_entities"] = [x.description for x in annotations.web.web_entities]
+
     # Safesearch
-    safe_search_feats = []
-    safe_search_feats.append(convert_likelihood_to_int(annotations.safe_searches.adult))
-    safe_search_feats.append(convert_likelihood_to_int(annotations.safe_searches.medical))
-    safe_search_feats.append(convert_likelihood_to_int(annotations.safe_searches.spoof))
-    safe_search_feats.append(convert_likelihood_to_int(annotations.safe_searches.violence))
+    feature_dictionary["safesearch_adult"] = convert_likelihood_to_int(annotations.safe_searches.adult)
+    feature_dictionary["safesearch_medical"] = convert_likelihood_to_int(annotations.safe_searches.medical)
+    feature_dictionary["safesearch_spoof"] = convert_likelihood_to_int(annotations.safe_searches.spoof)
+    feature_dictionary["safesearch_violence"] = convert_likelihood_to_int(annotations.safe_searches.violence)
+
     # properties
-    properties_feats = []
     for colorindex in range(0,5):
         color = annotations.properties.colors[colorindex].color
-        properties_feats.append(color.alpha)
-        properties_feats.append(color.blue)
-        properties_feats.append(color.green)
-        properties_feats.append(color.red)
-    # logos
-    logos_feats = []
-    logos_feats.append(len(annotations.logos))
-    # landmark
-    landmark_feats = []
-    landmark_feats.append(len(annotations.landmarks))
-    # labels
-    #TODO
-    # faces
-    faces_feats = []
-    faces_feats.append(len(annotations.faces))
+        feature_dictionary["properties_color" + str(colorindex) + "alpha"] = color.alpha
+        feature_dictionary["properties_color" + str(colorindex) + "blue"] = color.blue
+        feature_dictionary["properties_color" + str(colorindex) + "green"] = color.green
+        feature_dictionary["properties_color" + str(colorindex) + "red"] = color.red
 
-    featurevector = web_feats + safe_search_feats + \
-                    properties_feats + logos_feats + landmark_feats + \
-                    faces_feats
-    return featurevector
+    # logos
+    feature_dictionary["logos_logolist"] = [x.description for x in annotations.logos]
+    # landmark
+    feature_dictionary["landmarks_landmarkslist"] = [x.description for x in annotations.landmarks]
+    # labels
+    feature_dictionary["labels_labelslist"] = [x.description for x in annotations.labels]
+    # faces
+    feature_dictionary["faces_anger"] = [convert_likelihood_to_int(x.anger) for x in annotations.faces]
+    feature_dictionary["faces_joy"] = [convert_likelihood_to_int(x.joy) for x in annotations.faces]
+    feature_dictionary["faces_sorrow"] = [convert_likelihood_to_int(x.sorrow) for x in annotations.faces]
+    feature_dictionary["faces_surprise"] = [convert_likelihood_to_int(x.surprise) for x in annotations.faces]
+    feature_dictionary["faces_pan"] = [x.angles.pan for x in annotations.faces]
+    feature_dictionary["faces_roll"] = [x.angles.roll for x in annotations.faces]
+    feature_dictionary["faces_tilt"] = [x.angles.tilt for x in annotations.faces]
+    feature_dictionary["faces_headwear"] = [x.angles.tilt for x in annotations.faces]
+    feature_dictionary["faces_propertiesblurred"] = [x.image_properties.blurred for x in annotations.faces]
+    feature_dictionary["faces_propertiesunderexposed"] = [x.image_properties.underexposed for x in annotations.faces]
+
+    return feature_dictionary
 
 
 
@@ -175,27 +150,79 @@ if __name__ == '__main__':
 
 
     # Get a list of images/paths to images
-    images = ['https://assets.merriam-webster.com/mw/images/article/art-wap-article-main/disinformation-3378-30b12acfed3c4540ab101702aaf23744@1x.jpg',
-              'https://www.petdrugsonline.co.uk/images/page-headers/cats-master-header',
-              './resources/cat.jpg']
+
+    articles = json.load(open('buzzfeed_sandbox/buzzfeed_sandbox.json'))
+    path_to_articles = "buzzfeed_sandbox"
+    images = []
+    for article in articles:
+        try:
+            image = articles[article]['image']['location']
+            images.append((article, path_to_articles + '/' + image))
+        except:
+            images.append((article, None))
+
     # Feature list
-    imgfeats = np.array([])
+    imgfeats = {}
 
     # Iterate through images and get the annotations and the features
+    print 'Starting feature extraction'
+    count = 0
+
+    client = vision.Client()
+    vision_client = vision.Client().batch()
+    features = []
+
+    features.append(Feature(feature_type=FeatureTypes.WEB_DETECTION, max_results=100000))
+    features.append(Feature(feature_type=FeatureTypes.FACE_DETECTION, max_results=100000))
+    features.append(Feature(feature_type=FeatureTypes.LANDMARK_DETECTION, max_results=limit))
+    features.append(Feature(feature_type=FeatureTypes.IMAGE_PROPERTIES, max_results=limit))
+    features.append(Feature(feature_type=FeatureTypes.TEXT_DETECTION, max_results=limit))
+    features.append(Feature(feature_type=FeatureTypes.LABEL_DETECTION, max_results=limit))
+    features.append(Feature(feature_type=FeatureTypes.SAFE_SEARCH_DETECTION, max_results=limit))
+    features.append(Feature(feature_type=FeatureTypes.LOGO_DETECTION, max_results=limit))
+    # cnt = 0
     for image in images:
-        annotations = annotate(image)
-        featurevector = extract_features(annotations)
-        if len(imgfeats) == 0:
-            imgfeats = featurevector
+
+        path = image[1]
+        if path is None:
+            continue
+        # if cnt == 10:
+        #     break
+        # else:
+        #     cnt+=1
+        if 'http' in path or path.startswith('gs:'):
+            image = Image(source_uri=path,client=client)
+            vision_client.add_image(image=image,features=features)
         else:
-            imgfeats = np.vstack((imgfeats,featurevector))
+            with io.open(path, 'rb') as image_file:
+                content = image_file.read()
+
+            image = Image(content=content,client=client)
+            vision_client.add_image(image=image,features=features)
+
+
+    results = vision_client.detect()
+    for image in images:
+        if image is None:
+            imgfeats[image[0]] = None
+            continue
+        print 'Extracting for',count+1
+        annotations = results[count]
+        feature_dict = extract_features(annotations)
+        imgfeats[image[0]] = feature_dict
+
+        count+=1
+    import pickle
+    pickle.dump(imgfeats, open("imagefeatures.p", "wb"))
+    # json.dump(imgfeats,open("imagefeatures.json",'wb'))
     # Classify whether true or not
-    imgfeats = imgfeats.transpose()
-    X = imgfeats[0:1]
-    Y = [1, 0, 0]
-    classif = OneVsRestClassifier(SVC(kernel='linear'))
-    classif.fit(X, Y[0:1])
-    print classif.predict(imgfeats[2])
+    # imgfeats = imgfeats.transpose()
+    # X = imgfeats[0:1]
+    # Y = [1, 0, 0]
+    # classif = OneVsRestClassifier(SVC(kernel='linear'))
+    # classif.fit(X, Y[0:1])
+    # print classif.predict(imgfeats[2])
+
 
     # [END run_web]
 # [END full_tutorial]
