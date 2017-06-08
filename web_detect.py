@@ -25,6 +25,7 @@ Example usage:
 # [START imports]
 import json
 
+import math
 import numpy as np
 import io
 
@@ -50,7 +51,7 @@ def report(annotations):
     """Prints detected features in the provided web annotations."""
     # [START print_annotations]
     if annotations.pages_with_matching_images:
-        print('\n{} Pages with matching images retrieved')
+        print('\n{} Pages with matching imagesoriginal retrieved')
 
         for page in annotations.pages_with_matching_images:
             print('Score : {}'.format(page.score))
@@ -137,8 +138,8 @@ def extract_features(annotations):
     feature_dictionary["faces_roll"] = [x.angles.roll for x in annotations.faces]
     feature_dictionary["faces_tilt"] = [x.angles.tilt for x in annotations.faces]
     feature_dictionary["faces_headwear"] = [x.angles.tilt for x in annotations.faces]
-    feature_dictionary["faces_propertiesblurred"] = [x.image_properties.blurred for x in annotations.faces]
-    feature_dictionary["faces_propertiesunderexposed"] = [x.image_properties.underexposed for x in annotations.faces]
+    feature_dictionary["faces_propertiesblurred"] = [convert_likelihood_to_int(x.image_properties.blurred) for x in annotations.faces]
+    feature_dictionary["faces_propertiesunderexposed"] = [convert_likelihood_to_int(x.image_properties.underexposed) for x in annotations.faces]
 
     return feature_dictionary
 
@@ -149,7 +150,7 @@ if __name__ == '__main__':
     #Initialize web environment
 
 
-    # Get a list of images/paths to images
+    # Get a list of imagesoriginal/paths to imagesoriginal
 
     articles = json.load(open('buzzfeed_sandbox/buzzfeed_sandbox.json'))
     path_to_articles = "buzzfeed_sandbox"
@@ -164,64 +165,61 @@ if __name__ == '__main__':
     # Feature list
     imgfeats = {}
 
-    # Iterate through images and get the annotations and the features
+    # Iterate through imagesoriginal and get the annotations and the features
     print 'Starting feature extraction'
     count = 0
+    imagesperbatch = 7
+    batchamount = int(math.ceil(len(images)/imagesperbatch))
+    lastbatch = 0
+    start = lastbatch*imagesperbatch
+    for i in range(start,batchamount):
 
-    client = vision.Client()
-    vision_client = vision.Client().batch()
-    features = []
+        client = vision.Client().from_service_account_json('My First Project-219d40b984e0.json')
+        vision_client = client.batch()
+        features = []
+        features.append(Feature(feature_type=FeatureTypes.WEB_DETECTION, max_results=100000))
+        features.append(Feature(feature_type=FeatureTypes.FACE_DETECTION, max_results=100000))
+        features.append(Feature(feature_type=FeatureTypes.LANDMARK_DETECTION, max_results=limit))
+        features.append(Feature(feature_type=FeatureTypes.IMAGE_PROPERTIES, max_results=limit))
+        features.append(Feature(feature_type=FeatureTypes.TEXT_DETECTION, max_results=limit))
+        features.append(Feature(feature_type=FeatureTypes.LABEL_DETECTION, max_results=limit))
+        features.append(Feature(feature_type=FeatureTypes.SAFE_SEARCH_DETECTION, max_results=limit))
+        features.append(Feature(feature_type=FeatureTypes.LOGO_DETECTION, max_results=limit))
+        features.append(Feature(feature_type=FeatureTypes.DOCUMENT_TEXT_DETECTION, max_results=limit))
+        imagebatch = images[start:start+imagesperbatch]
+        for image in imagebatch:
+            path = image[1]
+            if path is None:
+                continue
+            if 'http' in path or path.startswith('gs:'):
+                image = Image(source_uri=path,client=client)
+                vision_client.add_image(image=image,features=features)
+            else:
+                with io.open(path, 'rb') as image_file:
+                    content = image_file.read()
 
-    features.append(Feature(feature_type=FeatureTypes.WEB_DETECTION, max_results=100000))
-    features.append(Feature(feature_type=FeatureTypes.FACE_DETECTION, max_results=100000))
-    features.append(Feature(feature_type=FeatureTypes.LANDMARK_DETECTION, max_results=limit))
-    features.append(Feature(feature_type=FeatureTypes.IMAGE_PROPERTIES, max_results=limit))
-    features.append(Feature(feature_type=FeatureTypes.TEXT_DETECTION, max_results=limit))
-    features.append(Feature(feature_type=FeatureTypes.LABEL_DETECTION, max_results=limit))
-    features.append(Feature(feature_type=FeatureTypes.SAFE_SEARCH_DETECTION, max_results=limit))
-    features.append(Feature(feature_type=FeatureTypes.LOGO_DETECTION, max_results=limit))
-    # cnt = 0
-    for image in images:
+                image = Image(content=content,client=client)
+                vision_client.add_image(image=image,features=features)
 
-        path = image[1]
-        if path is None:
-            continue
-        # if cnt == 10:
-        #     break
-        # else:
-        #     cnt+=1
-        if 'http' in path or path.startswith('gs:'):
-            image = Image(source_uri=path,client=client)
-            vision_client.add_image(image=image,features=features)
-        else:
-            with io.open(path, 'rb') as image_file:
-                content = image_file.read()
-
-            image = Image(content=content,client=client)
-            vision_client.add_image(image=image,features=features)
-
-
-    results = vision_client.detect()
-    for image in images:
-        if image is None:
-            imgfeats[image[0]] = None
-            continue
-        print 'Extracting for',count+1
-        annotations = results[count]
-        feature_dict = extract_features(annotations)
-        imgfeats[image[0]] = feature_dict
-
-        count+=1
+        count = 0
+        results = vision_client.detect()
+        for image in imagebatch:
+            if image[1] is None:
+                imgfeats[image[0]] = None
+                continue
+            # print 'Extracting for',count+1
+            annotations = results[count]
+            feature_dict = extract_features(annotations)
+            imgfeats[image[0]] = feature_dict
+            count+=1
+        if i%10==0:
+            print 'Waiting for a second'
+            time.sleep(1.05)
+        print 'Amount of imagesoriginal processed', len(imgfeats)
+        start+=imagesperbatch
     import pickle
     pickle.dump(imgfeats, open("imagefeatures.p", "wb"))
-    # json.dump(imgfeats,open("imagefeatures.json",'wb'))
-    # Classify whether true or not
-    # imgfeats = imgfeats.transpose()
-    # X = imgfeats[0:1]
-    # Y = [1, 0, 0]
-    # classif = OneVsRestClassifier(SVC(kernel='linear'))
-    # classif.fit(X, Y[0:1])
-    # print classif.predict(imgfeats[2])
+
 
 
     # [END run_web]

@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "gleaming-motif-170021",
+  "private_key_id": "219d40b984e0c966ce3821b620156f2481f4bfae",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC8Sxh/AozBhnMV\nno0Cb0HTbRRSBc2kbT9/NgKFnKKFusaBkL5F0Cgs8WnvgsdIWNIK/XU7O+aRt3cI\nKg6Ldd+1Vb5y4fIAcDFJqBqV4UC9BRSpPo/zZHlR7DWBsgBGVw5Canvspv/UdWGR\nUuvioqq2+LhtrPzlrcEYI8pSikscjW6txZVQpxZ1g5XelkLYl4cn8WESxQrgIQl1\n9cp+zmmf4Fop1aM6THk9JaHr0MFQpCHTET+6n6XvQhAypD1rqTjO+v1G2EZELWUc\nr7PCSiUxKK2Njoncf3KPvng9ltV1rLKN5PuloBkOPtTnQS+sJbCHgUdVsX8e/e/V\nw2ImrtZxAgMBAAECggEABoQiyOJxtJDOksT15EutX3+64EvLHhGZzPE1jSIqja41\nCG7V5tyZR1TjcaJ4+wv32OGEmRQtmoVa3TF3Z2Qg5cmd2aPwGAvJ6N6kbONqth/i\n4yiDGs0zVZ5zC5X5ZHXGzI2a1EnDOLsHMVxJRYKTndllqIYACoLE1+0FJ24Zw1ci\nbtWAIou0glWzklpP/Ne7lGDogc/bS6bj8ufJOzHYDa+10tVoQjGT35RB1WL0nWQ3\nFOaXHVpz49HhqN8rNY7MCEfEa9+4Cqo9t5td5EBtxAPG/nM8fUyv3V3eXI8lhC2j\n0TzGbzUf8XgiFaWuWIzsg3sonLB1ElCDUf3kfM/gAQKBgQDqc6MdIVZHoEO9lP74\nu4fe3kJNZxZaumUWfHTm9Cdip5+UJLMCe5s65XTldnY1nRxi1sWlbn6rUs9I8ZIW\nCHk5VBy/EjfWXHo5iMsrhj3vyQsc4mGRvibIRd3sz7xyHTyVmTXYv3NzVU/Wqfkx\nODTrsDMnWXCZh4XEC7HzefLvgQKBgQDNmWiRdquqe5phiX29yut9YgKBE/AHyzAH\ninbwwAiiyjoObJ2Jw3ObOIWvLe2CLj6MvkBQQgTYff96o9sP09X4XDBWLO91gWdG\ndYUYweGKPQyFITd5L9JwQ8/errLflXxN2Cw9FojZWhwxgmMVrdCXpTnMBhDW1LHH\nRhfsygpe8QKBgGl46jmRpMoGPFNOc0Icw2ws2vENXk4kqpNqHAFGd213cV/o/qsw\nRk5BqcwM9fL6oimI61OYGN4kG+J54rmMyFRVFbWTkZEa+1Vkx9nlw3lbHWe6JCC3\nxaS1YbhGYEWKB5ZZXZML1flduNQelV9iJNSe6PRb1T8Ma84dYMni47qBAoGBAJjx\nNch/7tOzfvRvwwocmXF8J0C+BCDIFcKGTlRphgMTTHzOb6K7spQVR9043SWqIP2x\nyUXq1o/1qscgfSUZAGLwsURpyPgwexL++TOhhpW/NEEUpJ+R44l/6HJOouGP4hhG\nZyJKUSLe1Xo+9FZ8Jl+omYYcPQqSzmzex41t/qkBAoGAVxk8oUyA+/NeOg5upsaq\na1tNXjKVN89H/NZLzbBK2ItvbJ7g8aE2g+wFgl2dsYEwC9f5fj+08we/qVFdCrcc\nFPzNSVrbbvv1ZunjRGkFA73PMstvqEod/cq6cDOlYoVwiNGrWvIv3p5VOF41CZIb\nClC6Ox7nPWlAz6XbrRbohrk=\n-----END PRIVATE KEY-----\n",
+  "client_email": "pedro-811@gleaming-motif-170021.iam.gserviceaccount.com",
+  "client_id": "110771098877131922794",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/pedro-811%40gleaming-motif-170021.iam.gserviceaccount.com"
+}
