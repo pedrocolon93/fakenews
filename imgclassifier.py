@@ -96,25 +96,38 @@ def main():
     X = []
     Y = []
     for artindex in train:
+        if len(X) == 100:
+            break
         if type(datamap[artindex][0]) is str:
             continue
         X.append(datamap[artindex][0])
         Y.append(datamap[artindex][1])
     for indx, label in enumerate(Y):
         Y[indx] = np.array([label])
+    Xtest = []
+    Ytest = []
+    for artindex in train:
+        if type(datamap[artindex][0]) is str:
+            continue
+        Xtest.append(datamap[artindex][0])
+        Ytest.append(datamap[artindex][1])
+    for indx, label in enumerate(Y):
+        Ytest[indx] = np.array([label])
 
     X = np.array(X)
+    Xtest = np.array(Xtest)
     # print X.ndim
     Y = np.array(Y)
+    Ytest = np.array(Ytest)
     print 'Featamount',len(X[0])
     k = GPy.kern.RBF(len(X[0]))
     m = GPy.models.GPClassification(X,Y,k)
-    m.save('imgclass.model')
-    m.optimize()
-    preds = m.predict(test)
+    # m.save('imgclass.model')
+    m.optimize(messages=True, max_f_eval=1000, max_iters=1000)
+    preds = m.predict(Xtest)
     match = 0
     nomatch = 0
-    for index,item in enumerate(test):
+    for index,item in enumerate(Ytest):
         if item == preds[0][index]:
             match+=1
         else:
